@@ -3,7 +3,7 @@ import io
 from fastapi import FastAPI, File, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
-from rembg import remove
+from rembg import remove  # type: ignore
 
 app = FastAPI()
 
