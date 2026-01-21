@@ -1,4 +1,4 @@
-import { Box, Container, Heading, Text, Button, VStack, Image, Input, Spinner, useToast } from '@chakra-ui/react'
+import { Box, Container, Heading, Text, Button, VStack, Image, Input, Spinner, useToast, SimpleGrid } from '@chakra-ui/react'
 import { useState } from 'react'
 import axios from 'axios'
 
@@ -77,6 +77,49 @@ function App() {
     }
   }
 
+  // 「背景をぼかす」ボタンが押された時
+  const handleBlurUpload = async () => {
+    if (!selectedFile) return
+
+    setIsLoading(true) //ローディング開始
+
+    //データを送るためのFormDataを作成
+    const formData = new FormData()
+    formData.append("file", selectedFile)
+
+    try {
+      //バックエンドにPOSTリクエストを送る(POST/process-image-blur)
+      //responseTypeをblobにすることで、バイナリデータを返すようにする
+      const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+      const response = await axios.post(`${apiUrl}/process-image-blur`, formData, {
+        responseType: 'blob',
+        headers: { "Content-Type": "multipart/form-data" }
+      })
+
+      //返ってきた画像データ(blob)を表示できるURLに変換
+      const processedImageUrl = URL.createObjectURL(response.data)
+      setResultUrl(processedImageUrl)
+
+      toast({
+        title: "ぼかし加工完了！",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      })
+
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: "エラーが発生しました",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      })
+    } finally {
+      setIsLoading(false) //ローディング終了
+    }
+  }
+
   //
   //画面の描画(JSX)
   //
@@ -90,7 +133,7 @@ function App() {
             Sales Studio
           </Heading>
           <Text fontSize="xl" color="gray.600">
-            商品画像の背景を白く加工します
+            商品画像の背景を加工します
           </Text>
         </Box>
 
@@ -130,18 +173,31 @@ function App() {
         </Box>
 
         {/* 加工ボタン */}
-        <Button
-          colorScheme="blue"
-          size="lg"
-          width="full"
-          onClick={handleUpload}
-          isLoading={isLoading} //通信中はボタンを押せないようにする
-          loadingText="加工中..."
-          isDisabled={!selectedFile} //画像を選択していないときは押せないようにする
-        >
-          背景を削除して白くする
-        </Button>
+        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4} w="full">
+          <Button
+            colorScheme="blue"
+            size="lg"
+            width={1}
+            onClick={handleUpload} //白背景加工
+            isLoading={isLoading} //通信中はボタンを押せないようにする
+            loadingText="加工中..."
+            isDisabled={!selectedFile} //画像を選択していないときは押せないようにする
+          >
+            背景を削除して白くする
+          </Button>
 
+          <Button
+            colorScheme="teal"
+            size="lg"
+            width={1}
+            onClick={handleBlurUpload} //ぼかし加工
+            isLoading={isLoading} //通信中はボタンを押せないようにする
+            loadingText="加工中..."
+            isDisabled={!selectedFile} //画像を選択していないときは押せないようにする
+          >
+            背景をぼかす
+          </Button>
+        </SimpleGrid>
       </VStack>
     </Container>
   )
